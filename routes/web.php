@@ -13,4 +13,5 @@ Route::post('/process_payment', [PaymentController::class, 'index'])->name('proc
 // Routes supplémentaires pour CinetPay
 Route::get('/success', [PaymentController::class, 'success'])->name('payment.success');
 Route::get('/cancel', [PaymentController::class, 'cancel'])->name('payment.cancel');
+
 Route::post('/webhook', [PaymentController::class, 'webhook'])->name('payment.webhook');

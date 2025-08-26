@@ -155,7 +155,7 @@ class PaymentController extends Controller
     
     /**
      * Méthode pour vérifier le statut d'une transaction
-     */
+    */
     public function checkTransactionStatus($transaction_id)
     {
         $url = 'https://api-checkout.cinetpay.com/v2/payment/check';
@@ -190,6 +190,35 @@ class PaymentController extends Controller
         
         return null;
     }
+
+    public function success(Request $request)
+    {
+        $transaction_id = $request->get('txn');
+        
+        if ($transaction_id) {
+            $payment = Payment::where('transaction_id', $transaction_id)->first();
+            if ($payment) {
+                $payment->update(['status' => 'completed']);
+            }
+        }
+        
+        return view('success', compact('transaction_id'));
+    }
+
+    public function cancel(Request $request)
+    {
+        $transaction_id = $request->get('txn');
+        
+        if ($transaction_id) {
+            $payment = Payment::where('transaction_id', $transaction_id)->first();
+            if ($payment) {
+                $payment->update(['status' => 'cancelled']);
+            }
+        }
+        
+        return view('cancel', compact('transaction_id'));
+    }
+
     
     /**
      * Webhook pour traiter les notifications CinetPay
