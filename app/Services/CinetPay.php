@@ -20,30 +20,24 @@ class CinetPay
             "apikey" => $this->api_key,
             "site_id" => $this->site_id,
             "transaction_id" => $data['transaction_id'] ?? 'TXN_' . time() . '_' . rand(1000, 9999),
-            "amount" => $data['amount'],
+            "amount" => $data['amount'] ?? 0,
             "currency" => $data['currency'] ?? 'XOF',
-            "alternative_currency" => "",
             "description" => $data['description'] ?? 'Paiement en ligne',
-            "customer_id" => $data['customer_id'] ?? '172',
+            "customer_id" => $data['customer_id'] ?? '1',
             "customer_name" => $data['customer_name'],
             "customer_surname" => $data['customer_surname'],
             "customer_email" => $data['customer_email'],
-            "customer_phone_number" => $data['customer_phone_number'],
+            "customer_phone_number" => $data['customer_phone_number'] ?? "+2250748164960",
             "customer_address" => $data['customer_address'] ?? 'Abidjan, Angré',
             "customer_city" => $data['customer_city'] ?? 'Abidjan',
             "customer_country" => $data['customer_country'] ?? 'CI',
             "customer_state" => $data['customer_state'] ?? 'CI',
             "customer_zip_code" => $data['customer_zip_code'] ?? '00225',
+            "channels" => $data['channels'] ?? 'ALL',
+            "metadata" => $data['metadata'] ?? 'User001',
+            "lang" => $data['lang'] ?? 'FR',
             "notify_url" => $data['notify_url'],
             "return_url" => $data['return_url'],
-            "channels" => $data['channels'] ?? 'ALL',
-            "metadata" => $data['metadata'] ?? 'user1',
-            "lang" => $data['lang'] ?? 'FR',
-            "invoice_data" => $data['invoice_data'] ?? [
-                "Donnee1" => "",
-                "Donnee2" => "",
-                "Donnee3" => ""
-            ]
         ];
        
         // Encodage en JSON

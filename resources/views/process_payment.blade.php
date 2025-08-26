@@ -38,10 +38,11 @@ if (!empty($errors)) {
 // Préparation des données pour CinetPay
 $transaction_id = 'TXN_' . date('YmdHis') . '_' . rand(1000, 9999);
  $formData = [
+    "currency" => $currency,
+    "apikey" => $apikey,
+    "site_id" => $site_id,
     "transaction_id" => $transaction_id,
     "amount" => $amount,
-    "currency" => $currency,
-    "alternative_currency" => "",
     "description" => $description,
     "customer_id" => "1",
     "customer_name" => $firstName,
@@ -50,19 +51,14 @@ $transaction_id = 'TXN_' . date('YmdHis') . '_' . rand(1000, 9999);
     "customer_phone_number" => $customer_phone_number,
     "customer_address" => "Abidjan, Angré",
     "customer_city" => "Abidjan",
-    "customer_country" => "CI", // Code pays Côte d'Ivoire
-    "customer_state" => "CI",
+    "customer_country" => "CI",
+    "customer_state" => "Abidjan",
     "customer_zip_code" => "00225",
+    "metadata" => "User001",
+    "channels" => "ALL",
+    "lang" => "FR",
     "notify_url" => url("/webhook"),
     "return_url" => url("/success?txn=" . $transaction_id),
-    "channels" => "ALL", // Pour avoir toutes les méthodes de paiement
-    "metadata" => "user1",
-    "lang" => "FR",
-    "invoice_data" => [
-        "Donnee1" => "",
-        "Donnee2" => "",
-        "Donnee3" => ""
-    ]
 ];
 
 // Initialisation du service CinetPay
@@ -71,9 +67,6 @@ $result = $CinetPay->generatePaymentLink($formData);
 
 // Traitement de la réponse
 if (isset($result["code"]) && $result["code"] == '201' && isset($result["data"]["payment_url"])) {
-    // Redirection automatique vers le paiement
-    header('Location: ' . $result["data"]["payment_url"]);
-    
     $payment = Payment::create([
         'transaction_id' => $transaction_id,
         'first_name' => $firstName,
@@ -87,6 +80,8 @@ if (isset($result["code"]) && $result["code"] == '201' && isset($result["data"][
         'payment_url' => $result["data"]["payment_url"] ?? null,
         'response_data' => $result ?? [],
     ]);
+    // Redirection automatique vers le paiement
+    header('Location: ' . $result["data"]["payment_url"]);
     exit;
 } else {
     // Affichage de la page d'erreur avec fallback

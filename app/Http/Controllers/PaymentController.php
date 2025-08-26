@@ -48,12 +48,13 @@ class PaymentController extends Controller
         
         // Préparation des données au format JSON comme dans la documentation
         $formData = [
+            "currency" => "XOF",
+            "apikey" => $apikey,
+            "site_id" => $site_id,
             "transaction_id" => $transaction_id,
             "amount" => $amount,
-            "currency" => $currency,
-            "alternative_currency" => "",
             "description" => $description,
-            "customer_id" => "172",
+            "customer_id" => "1",
             "customer_name" => $firstName,
             "customer_surname" => $lastName,
             "customer_email" => $email,
@@ -61,18 +62,13 @@ class PaymentController extends Controller
             "customer_address" => "Abidjan, Angré",
             "customer_city" => "Abidjan",
             "customer_country" => "CI", // Code pays Côte d'Ivoire
-            "customer_state" => "CI",
+            "customer_state" => "Abidjan",
             "customer_zip_code" => "00225",
-            "notify_url" => url("/webhook"),
-            "return_url" => url("/success?txn=" . $transaction_id),
+            "metadata" => "User001",
             "channels" => "ALL",
-            "metadata" => "user1",
             "lang" => "FR",
-            "invoice_data" => [
-                "Donnee1" => "",
-                "Donnee2" => "",
-                "Donnee3" => ""
-            ]
+            "notify_url" => url("/webhook"),
+            "return_url" => url("/success?txn=" . $transaction_id)
         ];
         
         try {

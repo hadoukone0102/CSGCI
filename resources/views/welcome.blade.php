@@ -225,7 +225,7 @@
                                     Carte bancaire
                                 </div>
                                 <div class="payment-method">
-                                    <i class="fas fa-university text-warning"></i><br>
+                                    <i class="fas fa-wave text-warning"></i><br>
                                     Virement
                                 </div>
                             </div>
