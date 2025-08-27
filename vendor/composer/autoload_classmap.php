@@ -10,6 +10,7 @@ return array(
     'App\\Http\\Controllers\\PaymentController' => $baseDir . '/app/Http/Controllers/PaymentController.php',
     'App\\Http\\Requests\\StorepaymentRequest' => $baseDir . '/app/Http/Requests/StorepaymentRequest.php',
     'App\\Http\\Requests\\UpdatepaymentRequest' => $baseDir . '/app/Http/Requests/UpdatepaymentRequest.php',
+    'App\\Models\\Payment' => $baseDir . '/app/Models/Payment.php',
     'App\\Models\\User' => $baseDir . '/app/Models/User.php',
     'App\\Policies\\PaymentPolicy' => $baseDir . '/app/Policies/PaymentPolicy.php',
     'App\\Providers\\AppServiceProvider' => $baseDir . '/app/Providers/AppServiceProvider.php',

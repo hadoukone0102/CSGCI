@@ -553,6 +553,7 @@ class ComposerStaticInitc514d8f7b9fc5970bdd94287905ef584
         'App\\Http\\Controllers\\PaymentController' => __DIR__ . '/../..' . '/app/Http/Controllers/PaymentController.php',
         'App\\Http\\Requests\\StorepaymentRequest' => __DIR__ . '/../..' . '/app/Http/Requests/StorepaymentRequest.php',
         'App\\Http\\Requests\\UpdatepaymentRequest' => __DIR__ . '/../..' . '/app/Http/Requests/UpdatepaymentRequest.php',
+        'App\\Models\\Payment' => __DIR__ . '/../..' . '/app/Models/Payment.php',
         'App\\Models\\User' => __DIR__ . '/../..' . '/app/Models/User.php',
         'App\\Policies\\PaymentPolicy' => __DIR__ . '/../..' . '/app/Policies/PaymentPolicy.php',
         'App\\Providers\\AppServiceProvider' => __DIR__ . '/../..' . '/app/Providers/AppServiceProvider.php',
