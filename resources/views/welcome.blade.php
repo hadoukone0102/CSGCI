@@ -139,6 +139,21 @@
         .form-section {
             margin-bottom: 25px;
         }
+        
+        .payment-method.selected {
+            border-color: #667eea !important;
+            background: #f8f9ff !important;
+            transform: scale(1.05);
+        }
+        
+        @media (max-width: 768px) {
+            .payment-container {
+                margin: 20px;
+            }
+            .left-section, .right-section {
+                padding: 20px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -190,6 +205,17 @@
                                 </div>
                             </div>
                         </div>
+
+                        <div class="form-section ">
+                            <label class="form-label">Type de consultation <span class="required">*</span></label>
+                            <select class="form-control currency-select form-select" name="consultation_type" id="consultationType">
+                                <option value="Consultation_medicale">Consultation médicale</option>
+                                <option value="Consultation_génétique">Consultation génétique</option>
+                                <option value="Service_medicale">Service médicale</option>
+                                <option value="Examen_medicale_Laboratoire">Examen médicale - Laboratoire</option>
+                                <option value="Examen_génétique_ADN">Examen génétique - ADN</option>
+                            </select>
+                        </div>
                         
                         <div class="form-section">
                             <label class="form-label">Description du paiement</label>
@@ -209,7 +235,7 @@
                         </div>
                         
                         <div class="payment-summary">
-                            <p class="mb-2">Veuillez suivre les étapes ci-dessous afin de finaliser votre paiement. Ce système est mis en place par CSGCI.</p>
+                            <p class="mb-2">Veuillez suivre les étapes ci-dessous afin de finaliser votre paiement. Ce système est mis en place par Clinique Saint George.</p>
                             
                             <div class="total-amount">
                                 Total: <span id="displayAmount">0</span> <span id="displayCurrency">XOF</span>
@@ -224,14 +250,16 @@
                                     <i class="fas fa-credit-card text-primary"></i><br>
                                     Carte bancaire
                                 </div>
-                                <div class="payment-method">
+                                <!-- <div class="payment-method">
                                     <i class="fas fa-wave text-warning"></i><br>
                                     Virement
-                                </div>
+                                </div> -->
                             </div>
                             
                             <div class="privacy-text">
-                                Vos données personnelles seront utilisées pour traiter votre commande, soutenir votre expérience sur ce site Web et à d'autres fins décrites dans notre politique de confidentialité.
+                                <p>Vos données personnelles seront utilisées pour traiter votre commande, soutenir votre expérience sur ce site Web et à d'autres fins décrites dans notre politique de confidentialité.</p>
+                                <p>En cliquant sur "Payer maintenant", vous acceptez nos <a href="#" target="_blank">Conditions d'utilisation</a> et notre <a href="#" target="_blank">Politique de confidentialité</a>.</p>
+                                <input type="checkbox" id="agreeTerms" required> <label for="agreeTerms">J'accepte les termes et conditions</label>
                             </div>
                             
                             <button type="button" class="btn btn-payment w-100" id="placeOrderBtn" disabled>
@@ -259,6 +287,7 @@
         const displayCurrency = document.getElementById('displayCurrency');
         const placeOrderBtn = document.getElementById('placeOrderBtn');
         const form = document.getElementById('paymentForm');
+        const agreeTerms = document.getElementById('agreeTerms');
         
         function updateDisplay() {
             const amount = amountInput.value || '0';
@@ -271,13 +300,15 @@
         }
         
         function checkFormValid() {
-            const firstName = document.getElementById('firstName').value;
-            const lastName = document.getElementById('lastName').value;
-            const phone = document.getElementById('phone').value;
-            const email = document.getElementById('email').value;
+            const firstName = document.getElementById('firstName').value.trim();
+            const lastName = document.getElementById('lastName').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const email = document.getElementById('email').value.trim();
             const amount = parseFloat(amountInput.value);
+            const termsAccepted = agreeTerms.checked;
+
+            const isValid = firstName && lastName && phone && email && amount >= 100 && termsAccepted;
             
-            const isValid = firstName && lastName && phone && email && amount >= 100;
             placeOrderBtn.disabled = !isValid;
         }
         
@@ -285,10 +316,13 @@
         amountInput.addEventListener('input', updateDisplay);
         currencySelect.addEventListener('change', updateDisplay);
         
-        // Validation en temps réel
+        // Validation en temps réel pour tous les champs obligatoires
         ['firstName', 'lastName', 'phone', 'email'].forEach(id => {
             document.getElementById(id).addEventListener('input', checkFormValid);
         });
+        
+        // Ajouter l'événement pour la case à cocher des termes et conditions
+        agreeTerms.addEventListener('change', checkFormValid);
         
         // Formatage du numéro de téléphone
         document.getElementById('phone').addEventListener('input', function(e) {
@@ -303,8 +337,16 @@
         
         // Soumission du formulaire
         placeOrderBtn.addEventListener('click', function() {
+            // Vérifier si tous les champs obligatoires sont remplis
             if (!form.checkValidity()) {
                 form.reportValidity();
+                return;
+            }
+            
+            // Vérifier spécifiquement la case à cocher des termes et conditions
+            if (!agreeTerms.checked) {
+                alert('Veuillez accepter les termes et conditions pour continuer.');
+                agreeTerms.focus();
                 return;
             }
             
@@ -330,22 +372,5 @@
             });
         });
     </script>
-    
-    <style>
-        .payment-method.selected {
-            border-color: #667eea !important;
-            background: #f8f9ff !important;
-            transform: scale(1.05);
-        }
-        
-        @media (max-width: 768px) {
-            .payment-container {
-                margin: 20px;
-            }
-            .left-section, .right-section {
-                padding: 20px;
-            }
-        }
-    </style>
 </body>
 </html>

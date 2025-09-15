@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    'cinetpay' => [
+        'api_key' => env('CINETPAY_APIKEY'),
+        'site_id' => env('CINETPAY_SITE_ID'),
+        'customer_phone' => env('CINETPAY_CUSTOMER_PHONE')
+    ]
+
 ];

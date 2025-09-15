@@ -1,12 +1,17 @@
 <?php
 // process_payment.php
-require_once 'app/Services/CinetPay.php'; // Ajustez le chemin selon votre structure
+require_once 'app/Services/CinetPay.php';
 use App\Models\Payment;
 
 // Configuration CinetPay
-$apikey = '122534553368a882d40a5342.97773008';
-$site_id = '105905508';
-$customer_phone_number = '+2250748164960';
+// $apikey = '122534553368a882d40a5342.97773008';
+// $site_id = '105905508';
+// $customer_phone_number = '+2250748164960';
+
+// Récupération des clés depuis config/services.php
+$apikey = config('services.cinetpay.api_key');
+$site_id = config('services.cinetpay.site_id');
+$customer_phone_number = config('services.cinetpay.customer_phone');
 
 // Validation des données POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -37,7 +42,7 @@ if (!empty($errors)) {
 
 // Préparation des données pour CinetPay
 $transaction_id = 'TXN_' . date('YmdHis') . '_' . rand(1000, 9999);
- $formData = [
+$formData = [
     "currency" => $currency,
     "apikey" => $apikey,
     "site_id" => $site_id,
@@ -138,26 +143,6 @@ if (isset($result["code"]) && $result["code"] == '201' && isset($result["data"][
             <h3 class="text-danger mb-3">Erreur de paiement</h3>
             <div class="alert alert-danger">
                 <strong>Erreur:</strong> <?php echo htmlspecialchars($error_message); ?>
-            </div>
-            
-            <!-- Informations de debug -->
-            <div class="accordion" id="debugAccordion">
-                <div class="accordion-item">
-                    <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#debugInfo">
-                            Informations de débogage
-                        </button>
-                    </h2>
-                    <div id="debugInfo" class="accordion-collapse collapse">
-                        <div class="accordion-body text-start">
-                            <h6>Données envoyées:</h6>
-                            <pre><?php echo htmlspecialchars(print_r($formData, true)); ?></pre>
-                            
-                            <h6>Réponse API:</h6>
-                            <pre><?php echo htmlspecialchars(print_r($result, true)); ?></pre>
-                        </div>
-                    </div>
-                </div>
             </div>
             
             <div class="mt-4">

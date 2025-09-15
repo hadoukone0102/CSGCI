@@ -13,13 +13,13 @@ class PaymentController extends Controller
     {
         return view('cinetpay');
     }
-    
+
     public function index(Request $request)
     {
-        // Configuration CinetPay
-        $apikey = '122534553368a882d40a5342.97773008';
-        $site_id = '105905508';
-        $customer_phone_number = '+2250748164960';
+        // Récupération des clés depuis config/services.php
+        $apikey = config('services.cinetpay.api_key');
+        $site_id = config('services.cinetpay.site_id');
+        $customer_phone_number = config('services.cinetpay.customer_phone');
 
         // Validation des données
         $request->validate([
@@ -32,25 +32,22 @@ class PaymentController extends Controller
             'description' => 'nullable|string',
             'payment_method' => 'nullable|string'
         ]);
-        
-        // Récupération des données
+
         $firstName = trim($request->first_name);
         $lastName = trim($request->last_name);
-        $phone = $this->formatPhone(trim($request->phone));
+        $phone = trim($request->phone);
         $email = trim($request->email);
         $amount = floatval($request->amount);
         $currency = trim($request->currency);
         $description = trim($request->description ?? 'Paiement en ligne');
         $paymentMethod = $request->payment_method ?? 'ALL';
-        
-        // Génération de l'ID de transaction
+
+        // Génération transaction id
         $transaction_id = 'TXN_' . date('YmdHis') . '_' . rand(1000, 9999);
-        
-        // Préparation des données au format JSON comme dans la documentation
+
+        // Préparer les données
         $formData = [
-            "currency" => "XOF",
-            "apikey" => $apikey,
-            "site_id" => $site_id,
+            "currency" => $currency,
             "transaction_id" => $transaction_id,
             "amount" => $amount,
             "description" => $description,
@@ -61,7 +58,7 @@ class PaymentController extends Controller
             "customer_phone_number" => $customer_phone_number,
             "customer_address" => "Abidjan, Angré",
             "customer_city" => "Abidjan",
-            "customer_country" => "CI", // Code pays Côte d'Ivoire
+            "customer_country" => "CI",
             "customer_state" => "Abidjan",
             "customer_zip_code" => "00225",
             "metadata" => "User001",
@@ -70,62 +67,153 @@ class PaymentController extends Controller
             "notify_url" => url("/webhook"),
             "return_url" => url("/success?txn=" . $transaction_id)
         ];
-        
-        try {
-            // Sauvegarder la transaction en base
-            $payment = Payment::create([
-                'transaction_id' => $transaction_id,
-                'first_name' => $firstName,
-                'last_name' => $lastName,
-                'phone' => $phone,
-                'email' => $email,
-                'amount' => $amount,
-                'currency' => $currency,
-                'description' => $description,
-                'payment_method' => $paymentMethod,
-                'status' => 'pending',
-                'api_data' => json_encode($formData)
+
+        // Sauvegarde en base
+        $payment = Payment::create([
+            'transaction_id' => $transaction_id,
+            'first_name' => $firstName,
+            'last_name' => $lastName,
+            'phone' => $phone,
+            'email' => $email,
+            'amount' => $amount,
+            'currency' => $currency,
+            'description' => $description,
+            'payment_method' => $paymentMethod,
+            'status' => 'pending',
+            'api_data' => json_encode($formData)
+        ]);
+
+        // Appel API CinetPay côté serveur
+        $CinetPay = new CinetPay($site_id, $apikey);
+        $result = $CinetPay->generatePaymentLink($formData);
+
+        if (isset($result["code"]) && $result["code"] == '201' && isset($result["data"]["payment_url"])) {
+            $payment->update([
+                'payment_url' => $result["data"]["payment_url"],
+                'api_response' => json_encode($result)
             ]);
-            
-            // Appel à l'API CinetPay
-            $CinetPay = new CinetPay($site_id, $apikey);
-            $result = $CinetPay->generatePaymentLink($formData);
-            
-            // Log de la réponse
-            Log::info('CinetPay API Response: ', $result);
-            
-            // Vérification de la réponse
-            if (isset($result["code"]) && $result["code"] == '201' && isset($result["data"]["payment_url"])) {
-                // Mettre à jour avec l'URL de paiement
-                $payment->update([
-                    'payment_url' => $result["data"]["payment_url"],
-                    'api_response' => json_encode($result)
-                ]);
-                
-                // Redirection vers CinetPay
-                return redirect()->away($result["data"]["payment_url"]);
-                
-            } else {
-                // Gestion des erreurs
-                $payment->update([
-                    'status' => 'failed',
-                    'api_response' => json_encode($result)
-                ]);
-                
-                $error_message = $result["message"] ?? "Erreur lors de la génération du lien de paiement";
-                return back()->withErrors(['payment' => $error_message])->withInput();
-            }
-            
-        } catch (\Exception $e) {
-            Log::error('Erreur CinetPay: ' . $e->getMessage());
-            
-            if (isset($payment)) {
-                $payment->update(['status' => 'error']);
-            }
-            
-            return back()->withErrors(['exception' => 'Erreur technique: ' . $e->getMessage()])->withInput();
+            // Redirection vers CinetPay
+            return redirect()->away($result["data"]["payment_url"]);
+        } else {
+            $payment->update([
+                'status' => 'failed',
+                'api_response' => json_encode($result)
+            ]);
+            $error_message = $result["message"] ?? "Erreur lors de la génération du lien de paiement";
+            return back()->withErrors(['payment' => $error_message])->withInput();
         }
     }
+
+    
+    // public function index(Request $request)
+    // {
+    //     // Configuration CinetPay
+    //     $apikey = '122534553368a882d40a5342.97773008';
+    //     $site_id = '105905508';
+    //     $customer_phone_number = '+2250748164960';
+
+    //     // Validation des données
+    //     $request->validate([
+    //         'first_name' => 'required|string|max:255',
+    //         'last_name' => 'required|string|max:255',
+    //         'phone' => 'required|string',
+    //         'email' => 'required|email',
+    //         'amount' => 'required|numeric|min:100',
+    //         'currency' => 'required|string|in:XOF,EUR,USD',
+    //         'description' => 'nullable|string',
+    //         'payment_method' => 'nullable|string'
+    //     ]);
+        
+    //     // Récupération des données
+    //     $firstName = trim($request->first_name);
+    //     $lastName = trim($request->last_name);
+    //     $phone = $this->formatPhone(trim($request->phone));
+    //     $email = trim($request->email);
+    //     $amount = floatval($request->amount);
+    //     $currency = trim($request->currency);
+    //     $description = trim($request->description ?? 'Paiement en ligne');
+    //     $paymentMethod = $request->payment_method ?? 'ALL';
+        
+    //     // Génération de l'ID de transaction
+    //     $transaction_id = 'TXN_' . date('YmdHis') . '_' . rand(1000, 9999);
+        
+    //     // Préparation des données au format JSON comme dans la documentation
+    //     $formData = [
+    //         "currency" => "XOF",
+    //         "apikey" => $apikey,
+    //         "site_id" => $site_id,
+    //         "transaction_id" => $transaction_id,
+    //         "amount" => $amount,
+    //         "description" => $description,
+    //         "customer_id" => "1",
+    //         "customer_name" => $firstName,
+    //         "customer_surname" => $lastName,
+    //         "customer_email" => $email,
+    //         "customer_phone_number" => $customer_phone_number,
+    //         "customer_address" => "Abidjan, Angré",
+    //         "customer_city" => "Abidjan",
+    //         "customer_country" => "CI", // Code pays Côte d'Ivoire
+    //         "customer_state" => "Abidjan",
+    //         "customer_zip_code" => "00225",
+    //         "metadata" => "User001",
+    //         "channels" => "ALL",
+    //         "lang" => "FR",
+    //         "notify_url" => url("/webhook"),
+    //         "return_url" => url("/success?txn=" . $transaction_id)
+    //     ];
+        
+    //     try {
+    //         // Sauvegarder la transaction en base
+    //         $payment = Payment::create([
+    //             'transaction_id' => $transaction_id,
+    //             'first_name' => $firstName,
+    //             'last_name' => $lastName,
+    //             'phone' => $phone,
+    //             'email' => $email,
+    //             'amount' => $amount,
+    //             'currency' => $currency,
+    //             'description' => $description,
+    //             'payment_method' => $paymentMethod,
+    //             'status' => 'pending',
+    //             'api_data' => json_encode($formData)
+    //         ]);
+            
+    //         // Appel à l'API CinetPay
+    //         $CinetPay = new CinetPay($site_id, $apikey);
+    //         $result = $CinetPay->generatePaymentLink($formData);
+            
+    //         // Vérification de la réponse
+    //         if (isset($result["code"]) && $result["code"] == '201' && isset($result["data"]["payment_url"])) {
+    //             // Mettre à jour avec l'URL de paiement
+    //             $payment->update([
+    //                 'payment_url' => $result["data"]["payment_url"],
+    //                 'api_response' => json_encode($result)
+    //             ]);
+                
+    //             // Redirection vers CinetPay
+    //             return redirect()->away($result["data"]["payment_url"]);
+                
+    //         } else {
+    //             // Gestion des erreurs
+    //             $payment->update([
+    //                 'status' => 'failed',
+    //                 'api_response' => json_encode($result)
+    //             ]);
+                
+    //             $error_message = $result["message"] ?? "Erreur lors de la génération du lien de paiement";
+    //             return back()->withErrors(['payment' => $error_message])->withInput();
+    //         }
+            
+    //     } catch (\Exception $e) {
+    //         //Log::error('Erreur CinetPay: ' . $e->getMessage());
+            
+    //         if (isset($payment)) {
+    //             $payment->update(['status' => 'error']);
+    //         }
+            
+    //         return back()->withErrors(['exception' => 'Erreur technique: ' . $e->getMessage()])->withInput();
+    //     }
+    // }
     
     /**
      * Formatage du numéro de téléphone au format international

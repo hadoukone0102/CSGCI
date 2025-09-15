@@ -15,7 +15,7 @@ class CinetPay
     public function generatePaymentLink($data) {
         $url = 'https://api-checkout.cinetpay.com/v2/payment';
        
-        // Préparer le payload au format JSON comme dans l'exemple
+        // Préparer le payload au format JSON
         $payload = [
             "apikey" => $this->api_key,
             "site_id" => $this->site_id,
@@ -46,10 +46,10 @@ class CinetPay
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_POST, 1);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonData); // JSON au lieu de form-data
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonData);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'Content-Type: application/json', // JSON header
+            'Content-Type: application/json',
             'Content-Length: ' . strlen($jsonData)
         ]);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
@@ -59,11 +59,6 @@ class CinetPay
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $curlError = curl_error($ch);
         curl_close($ch);
-       
-        // Log pour débogage
-        error_log("CinetPay JSON Payload: " . $jsonData);
-        error_log("CinetPay Response: " . $response);
-        error_log("CinetPay HTTP Code: " . $httpCode);
        
         // Vérification des erreurs cURL
         if ($curlError) {
@@ -87,7 +82,7 @@ class CinetPay
         if ($httpCode !== 200) {
             return [
                 'code' => '500',
-                'message' => 'Erreur HTTP: ' . $httpCode . '. Réponse: ' . substr($response, 0, 500),
+                'message' => 'Erreur HTTP: ' . $httpCode,
                 'data' => null
             ];
         }
@@ -98,9 +93,8 @@ class CinetPay
         if (json_last_error() !== JSON_ERROR_NONE) {
             return [
                 'code' => '500',
-                'message' => 'Réponse JSON invalide: ' . json_last_error_msg(),
-                'data' => null,
-                'raw_response' => $response
+                'message' => 'Réponse JSON invalide',
+                'data' => null
             ];
         }
        
