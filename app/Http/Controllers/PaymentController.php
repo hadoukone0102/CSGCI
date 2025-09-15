@@ -279,33 +279,42 @@ class PaymentController extends Controller
         return null;
     }
 
-    public function success(Request $request)
-    {
-        $transaction_id = $request->get('txn');
-        
-        if ($transaction_id) {
-            $payment = Payment::where('transaction_id', $transaction_id)->first();
-            if ($payment) {
+   public function success(Request $request)
+{
+    $transaction_id = $request->get('txn');
+
+    if ($transaction_id) {
+        $payment = Payment::where('transaction_id', $transaction_id)->first();
+
+        if ($payment) {
+            // On interroge CinetPay pour être sûr du statut
+            $cinetPay = new CinetPay(config('services.cinetpay.site_id'), config('services.cinetpay.api_key'));
+            $result = $this->checkTransactionStatus($transaction_id);
+
+            if ($result && isset($result['data']['status']) && $result['data']['status'] === 'ACCEPTED') {
                 $payment->update(['status' => 'completed']);
+            } else {
+                $payment->update(['status' => 'failed']);
             }
         }
-        
-        return view('success', compact('transaction_id'));
     }
 
-    public function cancel(Request $request)
-    {
-        $transaction_id = $request->get('txn');
-        
-        if ($transaction_id) {
-            $payment = Payment::where('transaction_id', $transaction_id)->first();
-            if ($payment) {
-                $payment->update(['status' => 'cancelled']);
-            }
+    return view('success', compact('transaction_id'));
+}
+
+public function cancel(Request $request)
+{
+    $transaction_id = $request->get('txn');
+
+    if ($transaction_id) {
+        $payment = Payment::where('transaction_id', $transaction_id)->first();
+        if ($payment) {
+            $payment->update(['status' => 'cancelled']);
         }
-        
-        return view('cancel', compact('transaction_id'));
     }
+
+    return view('cancel', compact('transaction_id'));
+}
 
     
     /**

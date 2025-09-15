@@ -63,10 +63,10 @@ $formData = [
     "channels" => "ALL",
     "lang" => "FR",
     "notify_url" => url("/webhook"),
-    "return_url" => url("/success?txn=" . $transaction_id),
+    "return_url" => url("/success?txn=" . $transaction_id), // http://localhost:8000/success?txn=Y2ShcoVPiTCXqjhHut7m
 ];
 
-// Initialisation du service CinetPay
+// Initialisation du service CinetPay 
 $CinetPay = new \App\Services\CinetPay($site_id, $apikey);
 $result = $CinetPay->generatePaymentLink($formData);
 
